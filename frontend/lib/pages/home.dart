@@ -1,7 +1,13 @@
+import 'dart:async';
+import 'dart:core';
+
 import 'package:ac/colors.dart';
 import 'package:ac/utils.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
 class HomePage extends StatefulWidget {
@@ -12,6 +18,44 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final db = FirebaseFirestore.instance;
+  double temp = 0;
+  double hum = 0;
+
+  @override
+  void initState() {
+    getData();
+    // Timer t =
+    //     Timer.periodic(const Duration(minutes: 1), (Timer s) => getData());
+  }
+
+  Future<void> getData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var uuid = prefs.getString("uuid");
+    // prefs.remove("uuid");
+    print("UUID is " + (uuid ?? "not found"));
+    // if (uuid != null) {
+    //   await db.collection(uuid).limit(1).get().then((value) {
+    //     for (var doc in value.docs) {
+    //       print(doc.data());
+    //     }
+    //   });
+    // }
+    if (uuid != null) {
+      db
+          .collection(uuid)
+          .orderBy("time", descending: true)
+          .limit(1)
+          .snapshots()
+          .listen((event) {
+        setState(() {
+          temp = event.docs[0].data()["temp"];
+          hum = event.docs[0].data()["hum"];
+        });
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,8 +117,8 @@ class _HomePageState extends State<HomePage> {
                               children: [
                                 Center(
                                   child: SleekCircularSlider(
-                                      initialValue: 40,
-                                      min: 10,
+                                      initialValue: temp,
+                                      min: 0,
                                       max: 40,
                                       appearance: CircularSliderAppearance(
                                           size: MediaQuery.of(context)
@@ -84,7 +128,7 @@ class _HomePageState extends State<HomePage> {
                                           counterClockwise: false,
                                           startAngle: 120,
                                           angleRange: 300,
-                                          animDurationMultiplier: 0.9,
+                                          animDurationMultiplier: 1.2,
                                           infoProperties: InfoProperties(
                                               bottomLabelText: "Temp.",
                                               bottomLabelStyle:
@@ -94,7 +138,7 @@ class _HomePageState extends State<HomePage> {
                                                       fontWeight:
                                                           FontWeight.w700),
                                               modifier: (percentage) =>
-                                                  "${percentage.toStringAsPrecision(2)}°C",
+                                                  "${percentage.toStringAsFixed(1)}°C",
                                               mainLabelStyle: TextStyles.title
                                                   .copyWith(fontSize: 40)),
                                           customWidths: CustomSliderWidths(
@@ -123,7 +167,7 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 Center(
                                   child: SleekCircularSlider(
-                                      initialValue: 65,
+                                      initialValue: hum,
                                       min: 0,
                                       max: 100,
                                       appearance: CircularSliderAppearance(
@@ -134,7 +178,7 @@ class _HomePageState extends State<HomePage> {
                                           counterClockwise: false,
                                           startAngle: 120,
                                           angleRange: 300,
-                                          animDurationMultiplier: 0.9,
+                                          animDurationMultiplier: 1.2,
                                           infoProperties: InfoProperties(
                                               bottomLabelText: "Humidity",
                                               bottomLabelStyle:
@@ -144,7 +188,7 @@ class _HomePageState extends State<HomePage> {
                                                       fontWeight:
                                                           FontWeight.w700),
                                               modifier: (percentage) =>
-                                                  "${percentage.toStringAsPrecision(2)}%",
+                                                  "${percentage.toStringAsFixed(0)}%",
                                               mainLabelStyle: TextStyles.title
                                                   .copyWith(fontSize: 40)),
                                           customWidths: CustomSliderWidths(
@@ -204,13 +248,30 @@ class _HomePageState extends State<HomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text("Avg. Humidity: ", style: TextStyles.main1),
-                            Text("72%",
+                            Text(hum.toStringAsFixed(2) + "%",
                                 style: TextStyles.main1
                                     .copyWith(fontWeight: FontWeight.w900)),
                           ]),
                     ],
                   )
-                ]))
+                ])),
+            MaterialButton(
+              color: colors.highlight,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              child: Text(
+                "Wipe",
+                style: TextStyle(color: colors.main.base, fontSize: 16),
+              ),
+              onPressed: () async {
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+
+                prefs.remove("uuid");
+                prefs.remove("wantedTemp");
+                print("wiped");
+              },
+            )
           ],
         ));
   }

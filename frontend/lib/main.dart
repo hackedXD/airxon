@@ -3,10 +3,30 @@ import 'package:ac/components/bottom_bar.dart';
 import 'package:ac/pages/charts.dart';
 import 'package:ac/pages/devices.dart';
 import 'package:ac/pages/home.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-void main() {
+import 'firebase_options.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  try {
+    final userCredential = await FirebaseAuth.instance.signInAnonymously();
+    print("Signed in with temporary account.");
+  } on FirebaseAuthException catch (e) {
+    switch (e.code) {
+      case "operation-not-allowed":
+        print("Anonymous auth hasn't been enabled for this project.");
+        break;
+      default:
+        print("Unknown error.");
+    }
+  }
   runApp(const MyApp());
 }
 
@@ -20,7 +40,7 @@ class MyApp extends StatelessWidget {
       const HomePage(),
       const DevicesPage(),
       const ChartsPage(),
-      const Center(child: Text("Settings")),
+      // const Center(child: Text("Settings")),
     ];
 
     return MaterialApp(

@@ -2,10 +2,10 @@ import 'package:ac/colors.dart';
 import 'package:flutter/material.dart';
 
 enum TimePeriod {
-  day,
-  week,
-  month,
-  year,
+  Day,
+  Week,
+  Month,
+  Year,
 }
 
 class TextStyles {

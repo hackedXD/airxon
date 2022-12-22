@@ -47,6 +47,12 @@ dependencies:
     rounded_loading_button: ^2.1.0
     web_socket_channel: ^2.2.0
     socket_io_client: ^2.0.0
+    udp: ^5.0.3
+    shared_preferences: ^2.0.5
+    cloud_firestore: ^4.2.0
+    firebase_core: ^2.4.0
+    firebase_auth: ^4.2.1
+    intl: ^0.17.0
 
 dev_dependencies:
     flutter_test:

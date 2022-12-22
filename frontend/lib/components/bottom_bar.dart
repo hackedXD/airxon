@@ -50,10 +50,10 @@ class _BottomBarState extends State<BottomBar> {
                   icon: Icon(Iconsax.chart_square),
                   activeIcon: Icon(Iconsax.chart_square5),
                   label: "Chart"),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.settings_outlined),
-                  activeIcon: Icon(Icons.settings),
-                  label: "Settings"),
+              // BottomNavigationBarItem(
+              //     icon: Icon(Icons.settings_outlined),
+              //     activeIcon: Icon(Icons.settings),
+              //     label: "Settings"),
             ],
           ),
         ));
