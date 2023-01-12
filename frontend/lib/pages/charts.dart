@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:ac/colors.dart';
+import 'package:ac/components/charts/hum_chart.dart';
 import 'package:ac/components/charts/time_chart.dart';
 import 'package:ac/utils.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -7,6 +10,7 @@ import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:gap/gap.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ChartsPage extends StatefulWidget {
   const ChartsPage({super.key});
@@ -16,7 +20,27 @@ class ChartsPage extends StatefulWidget {
 }
 
 class _ChartsPageState extends State<ChartsPage> with TickerProviderStateMixin {
-  TimePeriod _timePeriod = TimePeriod.Day;
+  TimePeriod _timePeriod = TimePeriod.Hour;
+  double estPrice = 0.0;
+  double estUsage = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    getData(Timer(Duration(minutes: 1), () => null));
+    Timer.periodic(Duration(minutes: 1), getData);
+  }
+
+  void getData(Timer timer) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    double usage = prefs.getDouble("energy") ?? 0.0;
+    if (this.mounted) {
+      setState(() {
+        estPrice = usage * 0.2895;
+        estUsage = usage;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +67,7 @@ class _ChartsPageState extends State<ChartsPage> with TickerProviderStateMixin {
                     ),
                     const Gap(20),
                     DefaultTabController(
-                        length: 4,
+                        length: 3,
                         child: Column(
                           children: [
                             Container(
@@ -71,9 +95,8 @@ class _ChartsPageState extends State<ChartsPage> with TickerProviderStateMixin {
                                 unselectedLabelColor: colors.main.text,
                                 // labelStyle: TextStyles.chip,
                                 tabs: const [
-                                  Tab(text: "Time"),
-                                  Tab(text: "Humidity"),
                                   Tab(text: "Temperature"),
+                                  Tab(text: "Humidity"),
                                   Tab(text: "Energy"),
                                 ],
                               ),
@@ -97,9 +120,90 @@ class _ChartsPageState extends State<ChartsPage> with TickerProviderStateMixin {
                                           TempChart(scope: _timePeriod),
                                         ]),
                                       ),
-                                      Text("hi"),
-                                      Text("sup"),
-                                      Text("siuuuu"),
+                                      Padding(
+                                        padding: EdgeInsets.all(10),
+                                        child: Column(children: [
+                                          timePeriodDropdown(),
+                                          const Gap(5),
+                                          HumChart(scope: _timePeriod),
+                                        ]),
+                                      ),
+                                      Padding(
+                                          padding: EdgeInsets.all(30),
+                                          child: Column(
+                                            children: [
+                                              Text(
+                                                  "Your Current Est. AC Energy Usage is",
+                                                  style: TextStyles.base
+                                                      .copyWith(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 15)),
+                                              const Gap(5),
+                                              Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Text(
+                                                        estUsage.toStringAsFixed(
+                                                            2),
+                                                        style: TextStyles.base
+                                                            .copyWith(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                fontSize: 50)),
+                                                    const Gap(5),
+                                                    Text("kWh",
+                                                        style: TextStyles.base
+                                                            .copyWith(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                fontSize: 20)),
+                                                    Divider(),
+                                                    Icon(Iconsax.electricity,
+                                                        size: 35,
+                                                        color:
+                                                            colors.main.yellow)
+                                                  ]),
+                                              const Gap(5),
+                                              Text("with an est. cost of",
+                                                  style: TextStyles.base
+                                                      .copyWith(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 15)),
+                                              const Gap(5),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                      estPrice
+                                                          .toStringAsFixed(2),
+                                                      style: TextStyles.base
+                                                          .copyWith(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              fontSize: 50)),
+                                                  const Gap(5),
+                                                  Text("SGD",
+                                                      style: TextStyles.base
+                                                          .copyWith(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              fontSize: 20)),
+                                                  const Gap(3),
+                                                  Icon(Iconsax.dollar_circle,
+                                                      size: 35,
+                                                      color: colors.main.green)
+                                                ],
+                                              )
+                                            ],
+                                          )),
                                     ],
                                   )),
                             )

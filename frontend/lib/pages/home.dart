@@ -21,6 +21,10 @@ class _HomePageState extends State<HomePage> {
   final db = FirebaseFirestore.instance;
   double temp = 0;
   double hum = 0;
+  Duration runningTime = Duration.zero;
+  double estEnergy = 0;
+  double avgTemp = 0;
+  double avgHum = 0;
 
   @override
   void initState() {
@@ -45,13 +49,24 @@ class _HomePageState extends State<HomePage> {
       db
           .collection(uuid)
           .orderBy("time", descending: true)
-          .limit(1)
           .snapshots()
-          .listen((event) {
-        setState(() {
-          temp = event.docs[0].data()["temp"];
-          hum = event.docs[0].data()["hum"];
-        });
+          .listen((event) async {
+        if (this.mounted) {
+          Duration val = await calculateRunningTime(event.docs);
+          setState(() {
+            temp = event.docs[0].data()["temp"];
+            hum = event.docs[0].data()["hum"];
+            runningTime = val;
+            estEnergy = runningTime.inMinutes / 60 * 0.544;
+            for (var doc in event.docs
+                .take(10 <= event.docs.length ? 10 : event.docs.length)) {
+              avgTemp += (doc.data())["temp"];
+              avgHum += (doc.data())["hum"];
+            }
+            avgTemp /= 10 <= event.docs.length ? 10 : event.docs.length;
+            avgHum /= 10 <= event.docs.length ? 10 : event.docs.length;
+          });
+        }
       });
     }
   }
@@ -220,7 +235,14 @@ class _HomePageState extends State<HomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text("Running Time: ", style: TextStyles.main1),
-                            Text("2h 1m",
+                            Text(
+                                (runningTime.inHours != 0)
+                                    ? runningTime.inHours.toString() + "h "
+                                    : "" +
+                                        runningTime.inMinutes
+                                            .remainder(60)
+                                            .toString() +
+                                        "m",
                                 style: TextStyles.main1
                                     .copyWith(fontWeight: FontWeight.w900)),
                           ]),
@@ -230,7 +252,7 @@ class _HomePageState extends State<HomePage> {
                           children: [
                             Text("Est. Energy Usage: ",
                                 style: TextStyles.main1),
-                            Text("50 watts",
+                            Text(estEnergy.toStringAsFixed(2) + " kwh",
                                 style: TextStyles.main1
                                     .copyWith(fontWeight: FontWeight.w900)),
                           ]),
@@ -239,7 +261,7 @@ class _HomePageState extends State<HomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text("Avg. Temp: ", style: TextStyles.main1),
-                            Text("23°C",
+                            Text("${avgTemp.toStringAsFixed(2)}°C",
                                 style: TextStyles.main1
                                     .copyWith(fontWeight: FontWeight.w900)),
                           ]),
@@ -248,31 +270,68 @@ class _HomePageState extends State<HomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text("Avg. Humidity: ", style: TextStyles.main1),
-                            Text(hum.toStringAsFixed(2) + "%",
+                            Text("${avgHum.toStringAsFixed(2)}%",
                                 style: TextStyles.main1
                                     .copyWith(fontWeight: FontWeight.w900)),
                           ]),
                     ],
                   )
                 ])),
-            MaterialButton(
-              color: colors.highlight,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
-              child: Text(
-                "Wipe",
-                style: TextStyle(color: colors.main.base, fontSize: 16),
-              ),
-              onPressed: () async {
-                SharedPreferences prefs = await SharedPreferences.getInstance();
+            // MaterialButton(
+            //   color: colors.highlight,
+            //   elevation: 0,
+            //   shape: RoundedRectangleBorder(
+            //       borderRadius: BorderRadius.circular(20)),
+            //   child: Text(
+            //     "Wipe",
+            //     style: TextStyle(color: colors.main.base, fontSize: 16),
+            //   ),
+            //   onPressed: () async {
+            //     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-                prefs.remove("uuid");
-                prefs.remove("wantedTemp");
-                print("wiped");
-              },
-            )
+            //     prefs.remove("uuid");
+            //     prefs.remove("wantedTemp");
+            //     print("wiped");
+            //   },
+            // ),
+            // MaterialButton(
+            //   color: colors.highlight,
+            //   elevation: 0,
+            //   shape: RoundedRectangleBorder(
+            //       borderRadius: BorderRadius.circular(20)),
+            //   child: Text(
+            //     "Set UUID",
+            //     style: TextStyle(color: colors.main.base, fontSize: 16),
+            //   ),
+            //   onPressed: () async {
+            //     SharedPreferences prefs = await SharedPreferences.getInstance();
+
+            //     prefs.setString("uuid", "42cfmyqmit2x");
+            //   },
+            // )
           ],
         ));
+  }
+
+  Future<Duration> calculateRunningTime(
+      List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    double wantedTemp = prefs.getDouble("wantedTemp") ?? 1;
+    int runningTime = 0;
+    int i = 0;
+
+    while (i < docs.length) {
+      if ((docs[i].data())["temp"] >= wantedTemp - 1 &&
+          (docs[i].data())["temp"] <= wantedTemp + 1) {
+        runningTime += 1;
+      } else {
+        break;
+      }
+      i++;
+    }
+
+    prefs.setDouble("energy", runningTime / 60 * 0.544);
+
+    return Duration(minutes: runningTime);
   }
 }

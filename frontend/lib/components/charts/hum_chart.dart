@@ -12,16 +12,16 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class TempChart extends StatefulWidget {
-  const TempChart({super.key, required this.scope});
+class HumChart extends StatefulWidget {
+  const HumChart({super.key, required this.scope});
 
   final TimePeriod scope;
 
   @override
-  State<TempChart> createState() => _TempChartState();
+  State<HumChart> createState() => _HumChartState();
 }
 
-class _TempChartState extends State<TempChart> {
+class _HumChartState extends State<HumChart> {
   final db = FirebaseFirestore.instance;
   TimePeriod prevScope = TimePeriod.Hour;
   bool dataLoaded = false;
@@ -60,7 +60,7 @@ class _TempChartState extends State<TempChart> {
                       .millisecondsSinceEpoch)
               .map((e) => FlSpot(
                   (e.data())["time"].millisecondsSinceEpoch.toDouble(),
-                  (e.data())["temp"].toDouble()))
+                  (e.data())["hum"].toDouble()))
               .toList();
           dataLoaded = true;
         });
@@ -97,7 +97,7 @@ class _TempChartState extends State<TempChart> {
     return SideTitleWidget(
       axisSide: meta.axisSide,
       child: Text(
-        "${value.toInt()}°C",
+        "${value.toInt()}%",
         style: TextStyles.base.copyWith(fontSize: 12),
       ),
     );
@@ -112,8 +112,8 @@ class _TempChartState extends State<TempChart> {
       maxX: DateTime.now().millisecondsSinceEpoch.toDouble(),
       // minX: 1,
       // maxX: 40,
-      minY: 15,
-      maxY: 35,
+      minY: 0,
+      maxY: 100,
       borderData: FlBorderData(
           border: Border(
         bottom: BorderSide(color: colors.main.overlay2, width: 1),
@@ -129,23 +129,12 @@ class _TempChartState extends State<TempChart> {
           spots: data,
           isCurved: false,
           barWidth: 2,
-          color: colors.highlight,
+          color: colors.main.teal,
           dotData: FlDotData(
             show: false,
           ),
         ),
       ],
-      extraLinesData: ExtraLinesData(horizontalLines: [
-        HorizontalLine(
-          y: prefferedTemp,
-          color: colors.main.flamingo,
-          // label: HorizontalLineLabel(
-          //     labelResolver: (p0) => "Preffered Temp",
-          //     style: TextStyles.main1
-          //         .copyWith(color: colors.main.flamingo, fontSize: 11),
-          //     show: true))
-        )
-      ]),
       titlesData: FlTitlesData(
         show: true,
         rightTitles: AxisTitles(
@@ -160,8 +149,8 @@ class _TempChartState extends State<TempChart> {
         leftTitles: AxisTitles(
           sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 38,
-              interval: 5,
+              reservedSize: 40,
+              interval: 20,
               getTitlesWidget: leftTitleWidgets),
         ),
         bottomTitles: AxisTitles(

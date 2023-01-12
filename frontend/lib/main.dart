@@ -3,6 +3,7 @@ import 'package:ac/components/bottom_bar.dart';
 import 'package:ac/pages/charts.dart';
 import 'package:ac/pages/devices.dart';
 import 'package:ac/pages/home.dart';
+import 'package:ac/pages/info.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -40,7 +41,7 @@ class MyApp extends StatelessWidget {
       const HomePage(),
       const DevicesPage(),
       const ChartsPage(),
-      // const Center(child: Text("Settings")),
+      const InfoPage(),
     ];
 
     return MaterialApp(

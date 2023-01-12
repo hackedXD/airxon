@@ -46,14 +46,14 @@ class _BottomBarState extends State<BottomBar> {
                   icon: Icon(Iconsax.gameboy4),
                   activeIcon: Icon(Iconsax.gameboy5),
                   label: "Devices"),
-              // BottomNavigationBarItem(
-              //     icon: Icon(Iconsax.chart_square),
-              //     activeIcon: Icon(Iconsax.chart_square5),
-              //     label: "Chart"),
-              // BottomNavigationBarItem(
-              //     icon: Icon(Icons.settings_outlined),
-              //     activeIcon: Icon(Icons.settings),
-              //     label: "Settings"),
+              BottomNavigationBarItem(
+                  icon: Icon(Iconsax.chart_square),
+                  activeIcon: Icon(Iconsax.chart_square5),
+                  label: "Chart"),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.info_outline),
+                  activeIcon: Icon(Icons.info),
+                  label: "Settings"),
             ],
           ),
         ));

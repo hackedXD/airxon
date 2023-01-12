@@ -140,7 +140,6 @@ void setup() {
   WiFi.mode(WIFI_AP_STA);
 
   // WiFi.disconnect(); // Reset For Dev Purposes
-  // WiFi.begin("YAP2201", "shikha123");
 
   Serial.print("Setting soft-AP configuration ... ");
   Serial.println(WiFi.softAPConfig(localIP, gateway, subnet) ? "Ready" : "Failed!");
@@ -152,7 +151,7 @@ void setup() {
   udp.begin(5111);
   while (WiFi.status() != WL_CONNECTED) {
     Serial.println("0 Connections");
-    // delay(500);
+
     while (WiFi.softAPgetStationNum() < 1) {
       delay(500);
     }
